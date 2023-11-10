@@ -15,6 +15,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework.views import APIView
 from rest_framework import status
 
+
 from app import serializers
 
 
@@ -55,16 +56,22 @@ def product(req,id=-1):
        
         temp_product.delete()
         return Response ("del...")
-    if req.method =='PUT':
+    if req.method == 'PUT':
         try:
-            temp_product=Product.objects.get(id=id)
+            temp_product = Product.objects.get(id=id)
         except Product.DoesNotExist:
-            return Response ("not found")
-       
-        ser = ProductSerializer(data=req.data)
-        old_product = Product.objects.get(id=id)
-        res = ser.update(old_product, req.data)
-        return Response(res)
+            return Response("not found")
+
+        # Create a ProductSerializer instance with the existing product and the request data
+        ser = ProductSerializer(temp_product, data=req.data)
+
+        if ser.is_valid():
+            # Save the updated product
+            ser.save()
+            return Response("put...")
+        else:
+            return Response(ser.errors)
+
     
 
 
@@ -84,13 +91,18 @@ class Category_view(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
    
     def put(self, request, pk):
-        my_model = Category.objects.get(pk=pk)
+        try:
+            my_model = Category.objects.get(pk=pk)
+        except Category.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
         serializer = CategorySerializer(my_model, data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-   
+    
+       
     def delete(self, request, pk):
         my_model = Category.objects.get(pk=pk)
         my_model.delete()

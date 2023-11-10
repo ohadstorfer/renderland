@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+        crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/css/toastr.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/js/toastr.min.js"></script>
+    <title>Document</title>
+
+
+
+</head>
+
+<body>
+    <!-- creating the nav bar -->
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+        <div class="container-fluid">
+            <a class="navbar-brand">Supermarket </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup"
+                aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                <div class="navbar-nav">
+                    <div class="btn-group">
+                        <button type="button" class="btn toggle" data-bs-toggle="collapse" aria-expanded="false" onclick="load_display()">
+                           All Products
+                        </button>
+                       
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown"
+                            aria-expanded="false">
+                            Categories
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="printAllCustomers()">General Products</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="printActiveCustomers()">Meat Products</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="printActiveCustomers()">Milk Products</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="printActiveCustomers()">Vegatable Products</a></li>
+                        </ul>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn toggle" data-bs-toggle="collapse" aria-expanded="false" onclick="printCart()">
+                            Cart
+                        </button>
+                        <ul class="dropdown-menu">
+
+                        </ul>
+                    </div>
+                    
+                    <form class="d-flex ml-auto" id="bookSearchForm">
+                        <input class="form-control me-2" type="search" placeholder="Search Products" aria-label="Search"
+                            id="bookSearchInput">
+                        <button class="btn btn-outline-success" type="submit">Search </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+
+
+
+
+
+
+
+    <div id="display"></div>
+    <script>
+        let cart = []
+        const MY_SERVER = "http://127.0.0.1:8000/"
+        let products = []
+        const load_display = async () => {
+            const res = await axios.get(MY_SERVER + "product/")
+            products = res.data
+            // console.log(products);
+            display.innerHTML = `<div class="row row-cols-1 row-cols-md-5 g-4 ">` + res.data.map((prod, ind) => `
+            <div class="col">
+            <div class="card h-100">
+            <img src=/static/${prod.img} class="card-img-top h-100" alt="...">
+            <div class="card-body">
+              <h5 class="card-title">${prod.price + "$"}</h5>
+              <p class="card-text">${prod.desc}</p>
+              <div class="form-group">
+                <label for="sel1">Amount:</label>
+                <input type="number" id="amountNum${ind}"> 
+                </div>
+                <button onClick='addToCart(${ind})' class="btn btn-outline-primary" >Add To Cart</button>
+              <div class="col-xs-2">
+            </div>
+            </div>
+            </div>
+            </div>
+          `)
+            display.innerHTML += "</div>"
+        }
+        load_display()
+
+
+
+
+
+        const addToCart = (ind) => {
+
+            const quantity = parseInt(document.getElementById(`amountNum${ind}`).value)
+          
+            // Get the product at the specified index from the 'products' array
+            product = products[ind];
+
+            // Check if the product is already in the 'cart'
+            if (cart.filter(item => item.id === product.id).length > 0) {
+                // If the product is in the cart, find the current product in the cart
+                currentProduct = cart.filter(item => item.id === product.id)[0];
+               
+                // Increase the 'amount' property of the current product by 1
+                currentProduct.amount = parseInt(currentProduct.amount) + quantity;
+            } else {
+                // If the product is not in the cart, add it to the 'cart' array
+                cart.push({
+                    id: product.id,
+                    desc: product.desc,
+                    price: product.price,
+                    img: product.img,
+                    category: product.category,
+                    amount: 1 // Set the 'amount' to 1 for a new product in the cart
+                });
+            }
+
+            // Update the 'cart' data in the local storage
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+        };
+
+
+
+
+        
+
+        const printCart = async () => {
+           
+            cart = JSON.parse(localStorage.getItem("cart"))
+            
+            display.innerHTML = `<div class="row row-cols-1 row-cols-md-5 g-4 ">` + cart.map((prod, ind) => `
+            <div class="col">
+            <div class="card h-100">
+            <img src=/static/${prod.img} class="card-img-top h-100" alt="...">
+            <div class="card-body">
+              <h5 class="card-title">${prod.desc }</h5>
+              <label for="sel1"> ${"Amount: " + prod.amount}</label>
+              <p class="card-text" >${ "Price for one:  " + (prod.price)+ "$"}</p>
+              <p class="card-text" >${ "Price for " + prod.amount +" "+ prod.desc+ ":   " + (parseFloat(prod.price)*parseFloat(prod.amount))+ "$"}</p>
+              
+              <div class="col-xs-2">
+            </div>
+            </div>
+            </div>
+            </div>
+          `)
+            display.innerHTML += "</div>"
+        }
+
+
+
+
+    </script>
+</body>
+
+</html>
